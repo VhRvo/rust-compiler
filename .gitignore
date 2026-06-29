@@ -1,0 +1,6 @@
+*.DS_Store
+eecs-483-wn26
+*.o
+*.s
+*.a
+*.out
