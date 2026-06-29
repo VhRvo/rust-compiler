@@ -4,3 +4,6 @@ eecs-483-wn26
 *.s
 *.a
 *.out
+*.run
+Neonate/build/
+Neonate/target/

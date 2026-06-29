@@ -119,6 +119,50 @@ rustc --target x86_64-apple-darwin stub.rs -C link-arg=compiled_code.o
 
 这条路可以不用 `ar`，但要改 Rust 代码。当前线程采用 `ar`，因为只需要保留 `#[link]` 并按静态库方式链接，路径更直观。
 
+两条链接路线对照：
+
+共同前置步骤都是先把汇编编译成 `.o`：
+
+```sh
+nasm -f macho64 compiled_code.s -o compiled_code.o
+```
+
+路线 1：保留 `#[link]`，用 `.a`
+
+```sh
+ar rcs libcompiled_code.a compiled_code.o
+rustc --target x86_64-apple-darwin stub.rs -L .
+```
+
+这条路线要求 Rust 代码里保留：
+
+```rust
+#[link(name = "compiled_code", kind = "static")]
+```
+
+因为 Rust 会按 `compiled_code` 这个库名去找：
+
+```text
+libcompiled_code.a
+```
+
+路线 2：不用 `.a`，直接传 `.o`
+
+```sh
+rustc --target x86_64-apple-darwin stub.rs -C link-arg=compiled_code.o
+```
+
+这条路线要求 Rust 代码里不要写 `#[link(name = "compiled_code", kind = "static")]`，只保留外部函数声明：
+
+```rust
+extern "sysv64" {
+    #[link_name = "\u{1}start_here"]
+    fn start_here() -> i64;
+}
+```
+
+否则 Rust 仍然会额外去找 `libcompiled_code.a`。如果你没有生成 `.a`，就还是会链接失败。
+
 参数解释：
 
 - `ar`：archive 工具，用来创建或修改 `.a` 静态库。
@@ -134,6 +178,46 @@ rustc --target x86_64-apple-darwin stub.rs -C link-arg=compiled_code.o
 - 不写 `c`，有些环境会在库不存在时给出创建警告；写上更明确。
 - 不写 `s`，有些 linker 可能找不到库里的符号；写上就是告诉 `ar` 建好索引。
 - 静态库名必须是 `libcompiled_code.a`，因为 Rust 代码里写的是 `#[link(name = "compiled_code", kind = "static")]`。linker 会按 `lib{name}.a` 规则找库。
+
+`.a` 文件本质上只是归档格式：
+
+```text
+libcompiled_code.a
+├── compiled_code.o
+└── 符号索引
+```
+
+它不会重新编译，也不会把多个 `.o` 合并成一个新的 `.o`。它只是把 object file 原样装进 archive。linker 使用 `.a` 时，会按需要取里面的 `.o`。比如程序需要 `start_here`，linker 查索引发现它在 `compiled_code.o`，就把这个 `.o` 拉进最终程序。
+
+`ranlib` 的作用是给 `.a` 建立或更新符号索引：
+
+```sh
+ranlib libcompiled_code.a
+```
+
+这两种写法效果接近：
+
+```sh
+ar r libcompiled_code.a compiled_code.o
+ranlib libcompiled_code.a
+```
+
+```sh
+ar rcs libcompiled_code.a compiled_code.o
+```
+
+其中 `s` 就是让 `ar` 顺手写符号索引。课程 notes 里的 `ar r libcompiled_code.a 2021.o` 通常也能工作，是因为现代 macOS/GNU 工具链经常会自动处理，或者 linker 能容忍；`ar rcs` 更显式、更稳。
+
+查看和解开 `.a`：
+
+```sh
+ar t libcompiled_code.a             # 查看 archive 里有哪些成员
+ar x libcompiled_code.a             # 解出所有成员文件
+ar x libcompiled_code.a compiled_code.o  # 只解出某一个成员
+nm libcompiled_code.a               # 查看符号，不需要解包
+```
+
+`ar x` 只是解包，不会反编译。解出来的仍然是 `.o` object file。
 
 ## 5. `rustc --target x86_64-apple-darwin stub.rs -L .`
 
