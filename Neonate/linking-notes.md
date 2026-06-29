@@ -70,6 +70,55 @@ rustc --target x86_64-apple-darwin stub.rs
 
 作用：把 `compiled_code.o` 打包成 Rust `#[link]` 能找到的静态库。
 
+为什么这里要用 `ar`：
+
+Rust 代码里写了：
+
+```rust
+#[link(name = "compiled_code", kind = "static")]
+```
+
+这不是在说“链接 `compiled_code.o`”。它是在说“链接一个名叫 `compiled_code` 的静态库”。按照 Unix/macOS linker 的命名规则，静态库文件名必须长这样：
+
+```text
+libcompiled_code.a
+```
+
+所以 `ar` 的作用就是把单个 object file：
+
+```text
+compiled_code.o
+```
+
+包装成 Rust/linker 按规则能找到的 static library：
+
+```text
+libcompiled_code.a
+```
+
+不用 `ar` 会怎么样：
+
+- 如果只有 `compiled_code.o`，但 Rust 里仍然保留 `#[link(name = "compiled_code", kind = "static")]`，linker 会找 `libcompiled_code.a`，不会自动把 `compiled_code.o` 当成这个库。
+- 结果通常是链接失败，报找不到 `compiled_code` 这个库。
+- 所以在当前 `stub.rs` 写法下，`ar` 不是为了“编译”，而是为了满足 `#[link]` 的库查找规则。
+
+如果真的不想用 `ar`，就不要用 `#[link]` 这套路。可以把 Rust 代码改成只声明外部函数：
+
+```rust
+extern "sysv64" {
+    #[link_name = "\u{1}start_here"]
+    fn start_here() -> i64;
+}
+```
+
+然后把 `.o` 直接传给 linker：
+
+```sh
+rustc --target x86_64-apple-darwin stub.rs -C link-arg=compiled_code.o
+```
+
+这条路可以不用 `ar`，但要改 Rust 代码。当前线程采用 `ar`，因为只需要保留 `#[link]` 并按静态库方式链接，路径更直观。
+
 参数解释：
 
 - `ar`：archive 工具，用来创建或修改 `.a` 静态库。
@@ -177,7 +226,7 @@ Undefined symbols for architecture x86_64:
 | --- | --- | --- |
 | `rustc stub.rs` | `E0570: "sysv64" is not a supported ABI` | 默认 target 是 `aarch64-apple-darwin` |
 | `rustup target add x86_64-apple-darwin` 后再 `rustc stub.rs` | 仍然 `E0570` | 安装 target 不等于使用 target |
-| 不生成 `libcompiled_code.a` | Rust 链接找不到库 | `#[link(name = "compiled_code")]` 要找 `libcompiled_code.a` |
+| 只有 `compiled_code.o`，不运行 `ar` | Rust 链接找不到 `compiled_code` 库 | `#[link(name = "compiled_code")]` 要找 `libcompiled_code.a`，不会自动找 `.o` |
 | 库名不是 `libcompiled_code.a` | Rust 链接找不到库 | linker 按 `lib{name}.a` 命名规则找 |
 | 不加 `#[link_name = "\u{1}start_here"]` | 找不到 `_start_here` | Rust/macOS 符号名和 NASM 导出名不一致 |
 | 汇编输出不是 Mach-O x86-64 | linker 无法链接 | macOS x86-64 程序需要 Mach-O 64-bit object |
