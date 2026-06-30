@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#243b53"/>
+    </marker>
+    <marker id="red-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#b42318"/>
+    </marker>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; fill: #102a43; }
+      .title { font-size: 42px; font-weight: 750; }
+      .subtitle { font-size: 22px; fill: #52606d; }
+      .panel-title { font-size: 28px; font-weight: 720; }
+      .code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 22px; fill: #102a43; }
+      .small { font-size: 18px; fill: #52606d; }
+      .label { font-size: 20px; font-weight: 650; }
+      .cell-text { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 20px; }
+      .panel { fill: #ffffff; stroke: #d9e2ec; stroke-width: 2; rx: 16; }
+      .cell { fill: #f0f4f8; stroke: #bcccdc; stroke-width: 2; }
+      .hot { fill: #d9f99d; stroke: #65a30d; stroke-width: 2; }
+      .ret { fill: #fee2e2; stroke: #ef4444; stroke-width: 2; }
+      .old { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; stroke-dasharray: 6 5; }
+      .arrow { stroke: #243b53; stroke-width: 3; marker-end: url(#arrow); fill: none; }
+      .red-arrow { stroke: #b42318; stroke-width: 3; marker-end: url(#red-arrow); fill: none; }
+      .dash { stroke-dasharray: 8 7; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1100" fill="#f7f9fb"/>
+
+  <text x="60" y="70" class="title">x86-64: rsp / push / pop / call / ret</text>
+  <text x="60" y="108" class="subtitle">普通 64-bit near call/ret 语义模型：栈向低地址增长；一个栈槽通常是 8 字节。</text>
+
+  <g transform="translate(1210,36)">
+    <rect x="0" y="0" width="320" height="96" rx="14" fill="#fff7ed" stroke="#fed7aa"/>
+    <text x="22" y="34" class="label">不是 NASM 宏/语法糖</text>
+    <text x="22" y="65" class="small">它们是真实机器指令；</text>
+    <text x="22" y="88" class="small">这里画的是等价的状态变化。</text>
+  </g>
+
+  <!-- Address direction legend -->
+  <g transform="translate(50,165)">
+    <line x1="0" y1="0" x2="0" y2="815" stroke="#627d98" stroke-width="4" marker-end="url(#arrow)"/>
+    <text x="18" y="10" class="small">高地址</text>
+    <text x="18" y="812" class="small">低地址</text>
+    <text x="-35" y="400" transform="rotate(-90 -35 400)" class="label">地址递减方向，也是 push/call 后 rsp 移动方向</text>
+  </g>
+
+  <!-- Panel 1: push -->
+  <g transform="translate(95,150)">
+    <rect class="panel" x="0" y="0" width="690" height="400"/>
+    <text x="28" y="44" class="panel-title">1) push rax</text>
+    <text x="28" y="84" class="code">rsp -= 8</text>
+    <text x="28" y="116" class="code">[rsp] = rax</text>
+
+    <g transform="translate(365,82)">
+      <rect class="old" x="0" y="0" width="230" height="58"/>
+      <text class="cell-text" x="34" y="36">old [rsp]</text>
+      <rect class="hot" x="0" y="58" width="230" height="58"/>
+      <text class="cell-text" x="72" y="94">RAX</text>
+      <rect class="cell" x="0" y="116" width="230" height="58"/>
+      <text class="cell-text" x="46" y="152">lower slot</text>
+      <text x="-96" y="35" class="small">rsp before</text>
+      <line x1="-16" y1="29" x2="0" y2="29" class="arrow dash"/>
+      <text x="-80" y="94" class="label">rsp after</text>
+      <line x1="-16" y1="87" x2="0" y2="87" class="arrow"/>
+    </g>
+
+    <path d="M95,225 C150,184 205,175 275,175" class="arrow"/>
+    <text x="42" y="238" class="small">先移动 rsp，再写入新栈顶</text>
+  </g>
+
+  <!-- Panel 2: pop -->
+  <g transform="translate(840,150)">
+    <rect class="panel" x="0" y="0" width="690" height="400"/>
+    <text x="28" y="44" class="panel-title">2) pop rbx</text>
+    <text x="28" y="84" class="code">rbx = [rsp]</text>
+    <text x="28" y="116" class="code">rsp += 8</text>
+
+    <g transform="translate(365,82)">
+      <rect class="hot" x="0" y="0" width="230" height="58"/>
+      <text class="cell-text" x="62" y="36">next top</text>
+      <rect class="old" x="0" y="58" width="230" height="58"/>
+      <text class="cell-text" x="82" y="94">X</text>
+      <rect class="cell" x="0" y="116" width="230" height="58"/>
+      <text class="cell-text" x="46" y="152">lower slot</text>
+      <text x="-98" y="94" class="small">rsp before</text>
+      <line x1="-16" y1="87" x2="0" y2="87" class="arrow dash"/>
+      <text x="-80" y="35" class="label">rsp after</text>
+      <line x1="-16" y1="29" x2="0" y2="29" class="arrow"/>
+    </g>
+
+    <rect x="70" y="200" width="190" height="70" rx="12" fill="#e0f2fe" stroke="#38bdf8"/>
+    <text x="95" y="244" class="code">rbx = X</text>
+    <path d="M365,169 C315,174 285,198 260,225" class="arrow"/>
+    <text x="42" y="312" class="small">先读旧栈顶，再把 rsp 移回上一个槽</text>
+  </g>
+
+  <!-- Panel 3: call -->
+  <g transform="translate(95,600)">
+    <rect class="panel" x="0" y="0" width="690" height="400"/>
+    <text x="28" y="44" class="panel-title">3) call foo</text>
+    <text x="28" y="84" class="code">push next_rip</text>
+    <text x="28" y="116" class="code">rip = foo</text>
+
+    <g transform="translate(350,80)">
+      <rect class="cell" x="0" y="0" width="250" height="58"/>
+      <text class="cell-text" x="58" y="36">old top</text>
+      <rect class="ret" x="0" y="58" width="250" height="58"/>
+      <text class="cell-text" x="34" y="94">return address</text>
+      <rect class="cell" x="0" y="116" width="250" height="58"/>
+      <text class="cell-text" x="56" y="152">lower slot</text>
+      <text x="-84" y="94" class="label">rsp</text>
+      <line x1="-16" y1="87" x2="0" y2="87" class="red-arrow"/>
+    </g>
+
+    <rect x="70" y="205" width="205" height="58" rx="12" fill="#f0fdf4" stroke="#22c55e"/>
+    <text x="94" y="242" class="code">rip = foo</text>
+    <path d="M275,234 C322,231 323,179 350,167" class="red-arrow"/>
+    <text x="42" y="315" class="small">call 把“下一条指令地址”压栈，然后跳到 foo</text>
+  </g>
+
+  <!-- Panel 4: ret -->
+  <g transform="translate(840,600)">
+    <rect class="panel" x="0" y="0" width="690" height="400"/>
+    <text x="28" y="44" class="panel-title">4) ret</text>
+    <text x="28" y="84" class="code">rip = [rsp]</text>
+    <text x="28" y="116" class="code">rsp += 8</text>
+
+    <g transform="translate(350,80)">
+      <rect class="hot" x="0" y="0" width="250" height="58"/>
+      <text class="cell-text" x="56" y="36">next top</text>
+      <rect class="ret" x="0" y="58" width="250" height="58"/>
+      <text class="cell-text" x="34" y="94">return address</text>
+      <rect class="cell" x="0" y="116" width="250" height="58"/>
+      <text class="cell-text" x="56" y="152">lower slot</text>
+      <text x="-80" y="94" class="small">rsp before</text>
+      <line x1="-16" y1="87" x2="0" y2="87" class="red-arrow dash"/>
+      <text x="-72" y="35" class="label">rsp after</text>
+      <line x1="-16" y1="29" x2="0" y2="29" class="arrow"/>
+    </g>
+
+    <rect x="70" y="205" width="230" height="58" rx="12" fill="#f0fdf4" stroke="#22c55e"/>
+    <text x="95" y="242" class="code">rip = return</text>
+    <path d="M350,167 C305,178 307,218 300,234" class="red-arrow"/>
+    <text x="42" y="315" class="small">ret 从栈顶取返回地址，跳回 call 的下一条指令</text>
+  </g>
+
+  <!-- Bottom summary -->
+  <g transform="translate(95,1025)">
+    <text x="0" y="0" class="label">核心：</text>
+    <text x="70" y="0" class="small">[rsp] 是当前栈顶槽；push/call 让 rsp 减小；pop/ret 先读 [rsp]，再让 rsp 增大。</text>
+  </g>
+</svg>
