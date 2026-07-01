@@ -28,10 +28,12 @@ fi
 
 cargo build --release \
  && echo "successfully built compiler" \
- && ./target/release/neonate $1 > compiled_code.s \
+ && mkdir -p build \
+ && ./target/release/neonate $1 > build/compiled_code.s \
  && echo "Generated assembly:" \
- && cat runtime/compiled_code.s \
- && cd runtime \
+ && cat build/compiled_code.s \
+ && cd build \
  && nasm -f $format -o compiled_code.o compiled_code.s \
  && ar rus libcompiled_code.a compiled_code.o \
- && rustc stub.rs -L . $extra_args -o main.exe
+ && rustc ../stub.rs -L . $extra_args -o main.exe \
+ && ./main.exe
