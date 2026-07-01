@@ -1,7 +1,8 @@
 ; macOS x86_64. On Apple Silicon this runs through Rosetta.
-; nasm -fmacho64 hello.asm -o hello.o
-; /usr/bin/ld -static -arch x86_64 -platform_version macos 11.0 $(xcrun --show-sdk-version) -e start hello.o -o hello
-; ./hello
+; mkdir -p build
+; nasm -fmacho64 hello.asm -o build/hello.o
+; /usr/bin/ld -static -arch x86_64 -platform_version macos 11.0 $(xcrun --show-sdk-version) -e start build/hello.o -o build/hello
+; ./build/hello
 
     global start
     section .text

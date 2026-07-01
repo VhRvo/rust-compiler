@@ -18,9 +18,10 @@ Apple linker: /usr/bin/ld
 
 ```sh
 cd /Users/zhangyongzhuo/Documents/EECS483/Nasm/Hello
-nasm -fmacho64 hello.asm -o hello.o
-/usr/bin/ld -static -arch x86_64 -platform_version macos 11.0 $(xcrun --show-sdk-version) -e start hello.o -o hello
-./hello
+mkdir -p build
+nasm -fmacho64 hello.asm -o build/hello.o
+/usr/bin/ld -static -arch x86_64 -platform_version macos 11.0 $(xcrun --show-sdk-version) -e start build/hello.o -o build/hello
+./build/hello
 ```
 
 验证输出：
@@ -61,7 +62,7 @@ ld: Missing -platform_version option
 ## 3. 汇编命令
 
 ```sh
-nasm -fmacho64 hello.asm -o hello.o
+nasm -fmacho64 hello.asm -o build/hello.o
 ```
 
 参数解释：
@@ -69,14 +70,14 @@ nasm -fmacho64 hello.asm -o hello.o
 - `nasm`：NASM 汇编器。
 - `-f macho64` / `-fmacho64`：输出 64 位 Mach-O object file，macOS 用这个格式。
 - `hello.asm`：输入汇编源码。
-- `-o hello.o`：输出 object file。
+- `-o build/hello.o`：把 object file 输出到 `build/` 目录。
 
 这一步只生成 object file，还不是可执行程序。
 
 ## 4. 链接命令
 
 ```sh
-/usr/bin/ld -static -arch x86_64 -platform_version macos 11.0 $(xcrun --show-sdk-version) -e start hello.o -o hello
+/usr/bin/ld -static -arch x86_64 -platform_version macos 11.0 $(xcrun --show-sdk-version) -e start build/hello.o -o build/hello
 ```
 
 逐段解释：
@@ -87,8 +88,8 @@ nasm -fmacho64 hello.asm -o hello.o
 - `-platform_version macos 11.0 ...`：告诉现代 macOS linker 目标平台、最低系统版本、SDK 版本。
 - `$(xcrun --show-sdk-version)`：让 shell 先运行 `xcrun --show-sdk-version`，把输出的 SDK 版本填进命令。
 - `-e start`：指定入口点是 asm 里的 `start` label。
-- `hello.o`：输入 object file。
-- `-o hello`：输出可执行文件名。
+- `build/hello.o`：输入 object file。
+- `-o build/hello`：把可执行文件输出到 `build/` 目录。
 
 ## 5. `xcrun` 是什么
 
@@ -147,3 +148,16 @@ message:
 - macOS x86-64 的 `write` syscall 是 `0x02000004`。
 - macOS x86-64 的 `exit` syscall 是 `0x02000001`。
 - 入口 label 是 `start`，所以 linker 用 `-e start`。
+
+## 7. Git 忽略规则
+
+把编译输出统一放进 `build/`，然后 `.gitignore` 用通用规则忽略：
+
+```gitignore
+build/
+**/build/
+```
+
+这样 `build/hello.o` 和 `build/hello` 都不会进 git，不需要为每个无扩展名可执行文件单独写规则。
+
+Makefile 版本见 [makefile-notes.md](makefile-notes.md)。

@@ -104,6 +104,7 @@ nasm -f macho64 -o 'build/2021/2021.o' 'build/2021/2021.s'
 
 ```make
 $(FILE)   # Make 变量，多个字符要用括号
+${FILE}   # Make 变量，和 $(FILE) 基本等价
 $@        # 当前目标
 $<        # 第一个依赖
 $^        # 所有依赖
@@ -113,6 +114,22 @@ $$HOME    # 留给 shell，最终 shell 看到 $HOME
 `$$HOME` 里，Make 只把 `$$` 变成一个普通 `$`，后面的 `HOME` 字符串原样保留，所以 shell 最后看到 `$HOME`。这里 `$` 不是通用转义符；`$$` 只是 Make 里用来生成字面量 `$` 的特殊写法。
 
 不要写 `$FILE` 表示 Make 变量 `FILE`；Make 会把它当成 `$F` 加普通文本 `ILE`。也不要写 `$HOME` 表示 shell 变量；recipe 里 shell 变量要写 `$$HOME`。
+
+`$(VAR)` 和 `${VAR}` 都是 Make 变量引用。Makefile 里推荐统一用 `$(VAR)`，因为 `${VAR}` 容易和 shell 变量混在一起。
+
+如果要把 shell 变量留给 shell，写法是：
+
+```make
+$$FOO       # shell 最后看到 $FOO
+$${FOO}     # shell 最后看到 ${FOO}
+```
+
+简单变量名时两者效果一样；拼接文本时 `${...}` 边界更清楚：
+
+```make
+$${FOO}_suffix   # shell 变量 FOO + 普通文本 _suffix
+$$FOO_suffix     # shell 变量 FOO_suffix
+```
 
 Best practice：Make 变量用 `$(VAR)`，Make 自动变量用 `$@` / `$<` / `$^`，shell 变量用 `$$VAR`。
 
