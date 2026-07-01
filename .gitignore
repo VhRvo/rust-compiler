@@ -1,10 +1,9 @@
 *.DS_Store
-eecs-483-wn26
-*.o
-*.s
+**/target/
 *.a
+*.o
 *.out
 *.run
-build/
+*.s
 **/build/
 Neonate/target/

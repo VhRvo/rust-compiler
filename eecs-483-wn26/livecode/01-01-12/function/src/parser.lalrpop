@@ -1,0 +1,18 @@
+use crate::ast::Expression;
+
+grammar;
+
+pub Prog: Expression = {
+    "def" "main" "(" "x" ")" ":" <e: Expr> => e,
+}
+
+Expr: Expression = {
+    "x" => Expression::Variable(),
+    <n: Num> => Expression::Number(n),
+    "add1" "(" <e: Expr> ")" => Expression::Add1(Box::new(e)),
+    "sub1" "(" <e: Expr> ")" => Expression::Sub1(Box::new(e)),
+}
+
+Num: i64 = {
+  <s:r"[+-]?[0-9]+"> => s.parse().unwrap()
+}

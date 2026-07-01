@@ -1,0 +1,11 @@
+grammar;
+
+pub Expr = {
+    <Num>,
+    "add1" "(" <Expr> ")",
+    "sub1" "(" <Expr> ")",
+}
+
+Num = {
+  <r"[+-]?[0-9]+">
+}
