@@ -25,6 +25,8 @@ address 0x1002 -> 1 byte
 
 ## 2. 为什么图里常用 8-byte slot
 
+`stack slot` 指编译器在当前函数的栈区域里划出来的一小块固定位置，用来存一个值。它不是硬件概念；CPU 只知道地址和 bytes，`slot` 是编译器和人为了管理栈空间起的名字。
+
 在 x86-64 里，很多栈上的东西刚好是 8 bytes：
 
 - 指针是 8 bytes
@@ -54,6 +56,14 @@ rsp - 8*3
 ```
 
 意思是按 8 bytes 一格画 stack slot。不是说内存只能 8 bytes 一次访问，也不是说每个变量真实都必须占 8 bytes。
+
+比如一个 8-byte stack slot 可以这样理解：
+
+```text
+slot 1: [rsp - 8,  rsp - 1]
+slot 2: [rsp - 16, rsp - 9]
+slot 3: [rsp - 24, rsp - 17]
+```
 
 ## 2.1. Little-endian 和 big-endian
 
