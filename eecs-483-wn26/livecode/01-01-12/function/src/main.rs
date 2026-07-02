@@ -55,11 +55,52 @@ fn compile(e: &Expression) {
         }
     }
     println!(
-        "        section .text
+        "
+        section .text
         global start_here
     start_here:"
     );
     compile_rec(e);
+    println!("ret");
+}
+
+enum PartialResult {
+    Constant(i64),
+    Variable(i64),
+}
+
+fn my_optimized_compile(e: &Expression) {
+    fn compile_rec(e: &Expression) -> PartialResult {
+        match e {
+            Expression::Variable() => PartialResult::Variable(0),
+            Expression::Number(n) => PartialResult::Constant(*n),
+            Expression::Add1(arg) => match compile_rec(arg) {
+                PartialResult::Constant(n) => PartialResult::Constant(n + 1),
+                PartialResult::Variable(n) => PartialResult::Variable(n + 1),
+            },
+            Expression::Sub1(arg) => match compile_rec(arg) {
+                PartialResult::Constant(n) => PartialResult::Constant(n - 1),
+                PartialResult::Variable(n) => PartialResult::Variable(n - 1),
+            },
+        }
+    }
+    println!(
+        "
+        section .text
+        global start_here
+    start_here:"
+    );
+    match compile_rec(e) {
+        PartialResult::Constant(n) => {
+            println!("mov rax, {}", n);
+        }
+        PartialResult::Variable(n) => {
+            println!("mov rax, rdi");
+            if n != 0 {
+                println!("add rax, {}", n);
+            }
+        }
+    }
     println!("ret");
 }
 
