@@ -8,3 +8,4 @@
 **/build/
 Neonate/target/
 **/*.lock
+**/dist-newstyle/
