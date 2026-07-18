@@ -2,7 +2,8 @@ use im::HashMap;
 use snake::ast;
 use snake::parser::ProgParser;
 use snake::ssa;
-use snake::cps_concise;
+use snake::cps_ddcg;
+use snake::cps_ddcg_with_renaming;
 use snake::cps_renaming;
 
 use std::env;
@@ -18,7 +19,7 @@ fn main() {
     let prog = ProgParser::new().parse(&input).unwrap();
     println!(
         "Here is the produced intermediate representation:\n{}",
-        cps_concise::lower(&prog)
+        cps_ddcg_with_renaming::lower(&prog)
     );
 }
 
