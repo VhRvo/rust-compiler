@@ -1,0 +1,5 @@
+def main(x):
+  def pow(n, acc):
+    if n == 0: acc else: pow(n - 1, x * acc)
+  in
+  pow(3, 1)

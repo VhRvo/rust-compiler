@@ -1,0 +1,7 @@
+let factBox = [false] in
+let fact = lambda n:
+  if n == 0: 1
+  else: n * factBox[0](n - 1)
+  end
+ in
+fact(5)

@@ -1,0 +1,39 @@
+use std::str::FromStr;
+use crate::syntax::{Exp};
+
+grammar;
+
+// First the lexemes (not strictly necessary in LALRPOP)
+NUM: i64 = <s:r"[+-]?[0-9]+"> => i64::from_str(s).unwrap();
+ID: String = <s:r"[a-zA-Z][a-zA-Z0-9_]*"> => String::from(s);
+PRINT: () = "print";
+LET: () = "let";
+IN: () = "in";
+LPAREN: () = "(";
+RPAREN: () = ")";
+EQ: () = "=";
+COMMA: () = ",";
+MAYCOMMA: () = ",?";
+PLUS: () = "+";
+
+pub Exp: Exp = {
+    <n: NUM> => Exp::Num(n),
+    <id: ID> => Exp::Var(id),
+    PRINT LPAREN <e: Exp> RPAREN => Exp::Print(Box::new(e)),
+    LPAREN <e: Exp> RPAREN => e,
+    // uncomment for an error
+    LET <mut bindings: Bindings> IN <body: Exp> => { bindings.reverse(); Exp::Let { bindings, body: Box::new(body) } },
+    <e1: Exp> PLUS <e2: Exp> => Exp::Add(Box::new(e1), Box::new(e2)),
+}
+
+// let x = e1 in e2 + e3
+// (let x = e1 in e2) + e3
+// let x = e1 in (e2 + e3)
+
+Bindings: Vec<(String, Exp)> = {
+    <b: ID> EQ <e: Exp> => vec![(b, e)],
+    <mut bs:Bindings> COMMA <b: ID> EQ <e: Exp> => {
+        bs.push((b, e));
+        bs
+    }
+}

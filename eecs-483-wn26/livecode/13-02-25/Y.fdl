@@ -1,0 +1,10 @@
+let Y = lambda f:
+  let s = lambda x: lambda y: f(x(x))(y) end end in
+  s(s)
+  end
+let fact = lambda fact: lambda x:
+  if x == 0: 1
+  else: x * fact (x - 1)
+  end end
+in
+fact(5)

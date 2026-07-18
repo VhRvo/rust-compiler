@@ -1,0 +1,14 @@
+gcd(m, n):
+  done():
+    ret m
+  neq():
+    c = m < n
+    lt():
+      n2 = n - m
+      br gcd(m, n2)
+    gt():
+      m2 = m - n
+      br gcd(m2, n)
+    cbr c lt gt
+  b = m == n
+  cbr b done neq

@@ -1,0 +1,7 @@
+def gcd(m, n):
+  if m == n:
+    m
+  else: if m < n:
+    gcd(m, n - m)
+  else:
+    gcd(m - n, n)

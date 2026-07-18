@@ -1,0 +1,5 @@
+Euclid's algorithm for computing the greatest common divisor of m and n:
+
+if m == n, m
+if m > n, gcd(m - n, n)
+if m < n, gcd(m, n - m)

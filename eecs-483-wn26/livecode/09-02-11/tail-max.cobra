@@ -1,0 +1,5 @@
+def main(x):
+  def max(m, n):
+    if m <= n: n else: m
+  in
+  max(x, -1 * x)

@@ -1,0 +1,9 @@
+extern read()
+extern print(x)
+
+def main(x):
+  def loop(sum):
+    let _ = print(sum) in
+    loop(sum + read())
+  in
+  loop(x)

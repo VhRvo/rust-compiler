@@ -1,0 +1,61 @@
+use std::str::FromStr;
+use crate::ast::{Program, Expression, Prim};
+
+grammar;
+
+Boxed<T>: Box<T> = {
+  <T> => Box::new(<>)
+}
+
+pub Prog: Program =
+    "def" "main" "(" <parameter:Id> ")" ":" <body:Expr> => Program { parameter, body };
+
+pub Expr: Expression = {
+    Let,
+    BinOps
+}
+
+Let: Expression = {
+    "let" <var:Id> "=" <expr:Boxed<Expr>> "in" <body:Boxed<Expr>> =>
+    Expression::Let(var, expr, body),
+}
+
+LAssoc<Op, Next>: Expression = {
+    <e1:LAssoc<Op, Next>> <prim:Op> <e2:Next> =>
+        Expression::Prim { prim, args: vec![e1, e2] },
+    Next
+}
+
+RAssoc<Op, Next>: Expression = {
+    <e1:Next> <prim:Op> <e2:RAssoc<Op, Next>> =>
+        Expression::Prim { prim, args: vec![e1, e2] },
+    Next
+}
+
+BinOps = SumExpr;
+SumExpr = LAssoc<PlusMinus, ProdExpr>;
+ProdExpr = LAssoc<Times, BaseExpr>;
+
+PlusMinus: Prim = {
+    "+" => Prim::Add,
+    "-" => Prim::Sub,
+}
+
+Times: Prim = {
+    "*" => Prim::Mul
+}
+
+BaseExpr: Expression = {
+    <var:Id> => Expression::Variable(var),
+    <num:Num> => Expression::Number(num),
+    <prim:Prim1> "(" <e:Expr> ")" => Expression::Prim { prim, args: vec![e] },
+    "(" <Expr> ")" => <>,
+}
+
+Prim1: Prim = {
+    "add1" => Prim::Add1,
+    "sub1" => Prim::Sub1,
+}
+
+Num: i64 = <s:r"[+-]?[0-9]+"> => i64::from_str(s).unwrap();
+Id: String = <s:r"[a-zA-Z][a-zA-Z0-9_]*"> => String::from(s);
