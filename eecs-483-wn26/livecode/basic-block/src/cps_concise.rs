@@ -23,7 +23,7 @@ type Continuation<'a> = Box<dyn FnOnce(ssa::Immediate) -> ssa::BlockBody + 'a>;
 
 pub fn lower(program: &ast::Program) -> ssa::Program {
     let next_name = Cell::new(0);
-    let destination = Preferred("result".to_string());
+    let destination = Preferred("%result".to_string());
     let done = Box::new(|imm| ssa::BlockBody::Return(imm));
 
     ssa::Program {
