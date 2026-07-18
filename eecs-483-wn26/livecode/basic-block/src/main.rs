@@ -2,6 +2,8 @@ use im::HashMap;
 use snake::ast;
 use snake::parser::ProgParser;
 use snake::ssa;
+use snake::cps_concise;
+use snake::cps_renaming;
 
 use std::env;
 use std::fs;
@@ -16,7 +18,7 @@ fn main() {
     let prog = ProgParser::new().parse(&input).unwrap();
     println!(
         "Here is the produced intermediate representation:\n{}",
-        lower(&prog)
+        cps_concise::lower(&prog)
     );
 }
 
@@ -123,6 +125,10 @@ fn lower_exp(e: &ast::Expression, k: Continuation) -> ssa::BlockBody {
             }
             _ => todo!(),
         },
-        _ => todo!(),
+        ast::Expression::Let(var, value, body) => {
+            let (dest, k_body) = k;
+            let tmp: String = var.clone();
+            lower_exp(value, (tmp, lower_exp(body, (dest, k_body))))
+        }
     }
 }
